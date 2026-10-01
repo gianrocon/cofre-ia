@@ -146,6 +146,8 @@ h2 { font-size: 1.15rem; font-weight: 600; letter-spacing: -.01em; margin: 0 0 .
 .caixa-busca input[type=search] {
   flex: 1; min-width: 100px; border: 0; background: transparent; padding: 6px 4px; box-shadow: none;
 }
+.chave-recentes { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font-size: .9rem; user-select: none; }
+.chave-recentes input { width: auto; margin: 0; cursor: pointer; }
 .chip-filtro {
   display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
   background: var(--destaque-suave); border-color: var(--destaque); padding: 3px 6px 3px 10px;

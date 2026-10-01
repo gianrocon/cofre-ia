@@ -96,6 +96,21 @@ class CrudTests(TestCase):
         self.assertContains(resp, 'data-url="https://www.exemplo.com/a"')
         self.assertContains(resp, 'exemplo.com</span>')  # domínio sem "www."
 
+    def test_modo_recentes_agrupa_por_dia_e_desmarcar_volta_ao_normal(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        antigo = Link.objects.create(titulo='Antigo', url='https://a.com', etiquetas='x')
+        Link.objects.filter(pk=antigo.pk).update(criado_em=timezone.now() - timedelta(days=3))
+        Link.objects.create(titulo='Novo1', url='https://b.com', etiquetas='y')
+        Link.objects.create(titulo='Novo2', url='https://c.com', etiquetas='z')
+        url = reverse('lista', args=['links'])
+        grupos = self.client.get(url, {'ordem': 'recentes'}).context['grupos']
+        self.assertEqual(grupos[0]['nome'], 'Hoje')
+        self.assertEqual({i.titulo for i in grupos[0]['itens']}, {'Novo1', 'Novo2'})
+        self.assertEqual(grupos[1]['itens'][0].titulo, 'Antigo')
+        normal = self.client.get(url).context['grupos']
+        self.assertEqual([g['nome'] for g in normal], ['X', 'Y', 'Z'])
+
     def test_busca_e_filtro_por_etiqueta(self):
         Prompt.objects.create(titulo='A', texto='chuva', etiquetas='imagem')
         Prompt.objects.create(titulo='B', texto='sol', etiquetas='texto')

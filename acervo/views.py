@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
@@ -7,6 +9,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import redirect
 from django.db.models import Q
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import IdeiaForm, LinkForm, NomeUsuarioForm, PromptForm, TemaForm
@@ -118,6 +121,22 @@ def agrupar_ideias(itens):
     return [grupos[s.value] for s in Ideia.Status if s.value in grupos]
 
 
+def agrupar_por_data(itens):
+    """Modo "recentes": um grupo por dia de criação, do mais novo para o mais antigo."""
+    hoje = timezone.localdate()
+    grupos = {}
+    for item in sorted(itens, key=lambda i: i.criado_em, reverse=True):
+        dia = timezone.localdate(item.criado_em)
+        if dia == hoje:
+            nome = 'Hoje'
+        elif dia == hoje - timedelta(days=1):
+            nome = 'Ontem'
+        else:
+            nome = dia.strftime('%d/%m/%Y')
+        grupos.setdefault(dia, {'nome': nome, 'itens': []})['itens'].append(item)
+    return [grupos[dia] for dia in sorted(grupos, reverse=True)]
+
+
 AGRUPADORES = {'prompts': agrupar_por_categoria, 'ideias': agrupar_ideias, 'links': agrupar_links}
 
 
@@ -143,7 +162,9 @@ class ListaView(AreaMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx['q'] = self.request.GET.get('q', '')
         ctx['etiqueta'] = self.request.GET.get('etiqueta', '')
-        ctx['grupos'] = AGRUPADORES[self.kwargs['area']](ctx['object_list'])
+        ctx['recentes'] = self.request.GET.get('ordem') == 'recentes'
+        agrupar = agrupar_por_data if ctx['recentes'] else AGRUPADORES[self.kwargs['area']]
+        ctx['grupos'] = agrupar(ctx['object_list'])
         return ctx
 
 

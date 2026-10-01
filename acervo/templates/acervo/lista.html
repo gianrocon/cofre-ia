@@ -8,15 +8,19 @@
     {% if etiqueta %}
     <span class="tag chip-filtro">
       {{ etiqueta }}
-      <a href="{% url 'lista' area %}{% if q %}?q={{ q|urlencode }}{% endif %}" title="Remover etiqueta" aria-label="Remover etiqueta {{ etiqueta }}">✕</a>
+      <a href="{% url 'lista' area %}?{% if q %}q={{ q|urlencode }}&{% endif %}{% if recentes %}ordem=recentes{% endif %}" title="Remover etiqueta" aria-label="Remover etiqueta {{ etiqueta }}">✕</a>
       <input type="hidden" name="etiqueta" value="{{ etiqueta }}">
     </span>
     {% endif %}
     <input type="search" name="q" value="{{ q }}" placeholder="{% if etiqueta %}Buscar nesta etiqueta...{% else %}Buscar...{% endif %}">
   </div>
   <button type="submit" class="btn btn-fantasma">Buscar</button>
+  <label class="chave-recentes" title="Mostra os itens por data de inclusão, os mais novos primeiro">
+    <input type="checkbox" name="ordem" value="recentes"{% if recentes %} checked{% endif %} onchange="this.form.submit()">
+    Mais recentes
+  </label>
   <a class="btn btn-icone" href="{% url 'criar' area %}" title="Novo" aria-label="Novo">+</a>
-  {% if q or etiqueta %}<a href="{% url 'lista' area %}" class="suave">limpar filtros</a>{% endif %}
+  {% if q or etiqueta %}<a href="{% url 'lista' area %}{% if recentes %}?ordem=recentes{% endif %}" class="suave">limpar filtros</a>{% endif %}
 </form>
 
 {% for grupo in grupos %}
@@ -43,7 +47,7 @@
         {% if area == 'prompts' and item.ferramenta %}<span class="ferramenta">{{ item.ferramenta }}</span>{% endif %}
         {% if area == 'links' %}<span class="ferramenta">{{ item.dominio }}</span>{% endif %}
         <span class="etiquetas">
-          {% for e in item.lista_etiquetas %}<a class="tag" href="?etiqueta={{ e|urlencode }}">{{ e }}</a>{% endfor %}
+          {% for e in item.lista_etiquetas %}<a class="tag" href="?etiqueta={{ e|urlencode }}{% if recentes %}&ordem=recentes{% endif %}">{{ e }}</a>{% endfor %}
         </span>
       </div>
       <div class="linha-acoes">
